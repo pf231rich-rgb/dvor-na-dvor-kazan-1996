@@ -9,7 +9,7 @@ const rooms = new Map();
 let nextId = 1;
 
 const CAR_SPAWNS = [
-  { id:"vaz2106-1", model:"vaz2106", name:"ВАЗ-2106", color:0x7b3028, x:-72, z:22, heading:0.1 },
+  { id:"vaz2106-1", model:"vaz2106", name:"ВАЗ-2106", color:0x7b3028, x:0, z:15, heading:0.1 },
   { id:"vaz2109-1", model:"vaz2109", name:"ВАЗ-2109", color:0x9a9b8e, x:38, z:-54, heading:1.4 },
   { id:"gaz24-1", model:"gaz24", name:"ГАЗ-24 Волга", color:0x263e4c, x:106, z:36, heading:Math.PI },
   { id:"vaz2101-1", model:"vaz2101", name:"ВАЗ-2101", color:0x8c6b36, x:-126, z:-64, heading:-0.4 },
@@ -47,7 +47,7 @@ function publicPlayer(p) {
 }
 function publicCar(c) {
   return { id:c.id, model:c.model, name:c.name, color:c.color, x:c.x, z:c.z,
-    heading:c.heading, speed:c.speed, occupants:c.occupants.slice() };
+    heading:c.heading, speed:c.speed, occupants:c.occupants.filter(Boolean) };
 }
 function state(room) {
   return { type:"state", players:Array.from(room.players.values(), publicPlayer),
@@ -104,10 +104,10 @@ function move(ws,msg) {
 }
 function enterVehicle(ws) {
   const room=roomBySocket(ws),p=room&&room.players.get(ws.id);if(!p||!p.alive||p.vehicleId)return;
-  let chosen=null,best=7;
-  for(const c of room.cars.values()){const d=Math.hypot(c.x-p.x,c.z-p.z);if(d<best&&c.occupants.length<4){chosen=c;best=d;}}
+  let chosen=null,best=12;
+  for(const c of room.cars.values()){const d=Math.hypot(c.x-p.x,c.z-p.z);if(d<best&&c.occupants.some(id=>!id)){chosen=c;best=d;}}
   if(!chosen)return send(ws,{type:"notice",text:"Подойди ближе к машине."});
-  const seat=chosen.occupants.length;chosen.occupants.push(p.id);p.vehicleId=chosen.id;p.seat=seat;p.x=chosen.x;p.z=chosen.z;p.action="idle";
+  const seat=chosen.occupants.findIndex(id=>!id);chosen.occupants[seat]=p.id;p.vehicleId=chosen.id;p.seat=seat;p.x=chosen.x;p.z=chosen.z;p.action="idle";
   broadcast(room,{type:"notice",text:p.nick+(seat===0?" сел за руль ":" сел в ") + chosen.name+"."});publish(room);
 }
 function exitVehicle(ws) {
