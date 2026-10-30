@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 8080;
 function makeRoom(code, mode) { return {code,mode:mode==="versus"?"versus":"coop",players:new Map(),enemies:new Map(),score:0,round:1,nextEnemy:1,lastSpawn:0}; }
 function createGameServer(port=PORT) {
  const rooms=new Map();let nextId=1;
- function snapshot(room){return {type:"state",players:Array.from(room.players.values(),p=>({id:p.id,nick:p.nick,x:p.x,y:p.y,z:p.z,hp:p.hp,score:p.score,team:p.team,face:p.face,block:p.block,hit:p.hit,jumpUntil:p.jumpUntil||0})),enemies:Array.from(room.enemies.values()),score:room.score,round:room.round};}
+ function snapshot(room){return {type:"state",players:Array.from(room.players.values(),p=>({id:p.id,nick:p.nick,x:p.x,y:p.y,z:p.z,hp:p.hp,score:p.score,team:p.team,face:p.face,block:p.block,hit:p.hit,jumpUntil:p.jumpUntil||0,color:p.color})),enemies:Array.from(room.enemies.values()),score:room.score,round:room.round};}
  function send(ws,o){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(o));}
  function broadcast(room,o){for(const p of room.players.values())send(p.ws,o);}
  function publish(room){broadcast(room,snapshot(room));}
