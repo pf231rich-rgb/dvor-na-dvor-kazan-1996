@@ -103,3 +103,33 @@ test("room rejects the eleventh player", async () => {
     for (const ws of clients) ws.close();
   }
 });
+
+test("attacks damage opponents and blocking reduces damage", async () => {
+  const a = await connect();
+  const b = await connect();
+  try {
+    const wa = await join(a, "Боец 1", "COMBAT");
+    const wb = await join(b, "Боец 2", "COMBAT");
+    const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+    for (let i = 0; i < 12; i++) {
+      a.send(JSON.stringify({ type:"move", x:0, z:0, dx:1, dz:0, action:"idle" }));
+      b.send(JSON.stringify({ type:"move", x:1, z:0, dx:-1, dz:0, action:"idle" }));
+      await pause(120);
+    }
+    const damaged = waitForMessage(b, m => m.type === "state" && m.players && m.players.some(p => p.id === wb.id && p.health === 72));
+    a.send(JSON.stringify({ type:"action", action:"attack" }));
+    const first = await damaged;
+    assert.equal(first.players.find(p => p.id === wb.id).health, 72);
+
+    b.send(JSON.stringify({ type:"move", x:1, z:0, dx:-1, dz:0, action:"block" }));
+    await pause(120);
+    await pause(700);
+    const blocked = waitForMessage(a, m => m.type === "state" && m.players && m.players.some(p => p.id === wb.id && p.health === 64));
+    a.send(JSON.stringify({ type:"action", action:"attack" }));
+    const second = await blocked;
+    assert.equal(second.players.find(p => p.id === wb.id).health, 64);
+  } finally {
+    a.close();
+    b.close();
+  }
+});
