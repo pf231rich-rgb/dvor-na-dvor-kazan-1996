@@ -61,7 +61,8 @@ function releaseVehicle(room, p, tell=true) {
   if (!p.vehicleId) return;
   const car = room.cars.get(p.vehicleId);
   if (car) {
-    car.occupants[p.seat] = null;\n    if (car.occupants.every(id => !id)) { car.throttle=0; car.steer=0; }
+    car.occupants[p.seat] = null;
+    if (car.occupants.every(id => !id)) { car.throttle=0; car.steer=0; }
     if (tell) broadcast(room, { type:"notice", text:p.nick+" вышел из "+car.name+"." });
   }
   p.vehicleId = null; p.seat = null; p.action = "idle";
