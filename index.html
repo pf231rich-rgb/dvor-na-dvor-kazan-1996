@@ -35,13 +35,13 @@ button{border:0;border-radius:9px;background:#d69b5c;color:#1a1a1a;font-weight:9
   <label class="field" for="room">КОД КОМНАТЫ</label><input id="room" maxlength="10" value="DVOR96" autocapitalize="characters">
   <button id="join">ВОЙТИ ВО ДВОР</button>
   <div id="status">Подключение к игровому серверу произойдёт после нажатия.</div>
-  <p class="small">Один код комнаты для тебя и друга. На компьютере: WASD, J или пробел. На телефоне: экранные кнопки.</p>
+  <p class="small">Один код комнаты для тебя и друга. На компьютере: WASD, мышь для поворота камеры, J или пробел. На телефоне: экранные кнопки и свайп по свободной части экрана для обзора.</p>
 </div></div>
 <div id="controls">
   <div class="pad"><button id="up">▲</button><button id="left">◀</button><button id="right">▶</button><button id="down">▼</button></div>
   <div class="actions"><button id="block">БЛОК</button><button id="hit">УДАР</button></div>
 </div>
-<div id="notice"></div><div id="footer">WASD — движение · J — удар · ПРОБЕЛ — блок</div>
+<div id="notice"></div><div id="footer">WASD — движение · мышь/палец — обзор · J — удар · ПРОБЕЛ — блок</div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
 (function(){
@@ -80,6 +80,25 @@ for(let i=0;i<14;i++){const crack=cube(.7+Math.random()*1.6,.012,.025,0x343833,-
 const players=new Map();let ws=null,myId=null,myTeam="",lastSend=0,lastAttack=0,noticeTimer=null;
 const keys={w:false,a:false,s:false,d:false,block:false};
 const input={x:0,z:0};
+let cameraYaw=0, dragPointer=null, lastPointerX=0;
+renderer.domElement.style.cursor="grab";
+renderer.domElement.addEventListener("pointerdown",e=>{
+ if(e.pointerType==="mouse" && e.button!==0)return;
+ dragPointer=e.pointerId;lastPointerX=e.clientX;
+ renderer.domElement.setPointerCapture(e.pointerId);
+ renderer.domElement.style.cursor="grabbing";
+});
+renderer.domElement.addEventListener("pointermove",e=>{
+ if(dragPointer!==e.pointerId)return;
+ const delta=e.clientX-lastPointerX;lastPointerX=e.clientX;
+ cameraYaw-=delta*.006;
+});
+function stopCameraDrag(e){
+ if(dragPointer===e.pointerId){dragPointer=null;renderer.domElement.style.cursor="grab";}
+}
+renderer.domElement.addEventListener("pointerup",stopCameraDrag);
+renderer.domElement.addEventListener("pointercancel",stopCameraDrag);
+renderer.domElement.addEventListener("lostpointercapture",stopCameraDrag);
 function makePerson(p){
  const g=new THREE.Group();scene.add(g);
  const red=p.team==="red", jacketColor=red?0x853d32:0x294e69, pantsColor=red?0x34343a:0x252d34;
@@ -158,7 +177,10 @@ function frame(now){
  requestAnimationFrame(frame);const dt=Math.min((now-previous)/1000,.04);previous=now;
  const me=players.get(myId);
  if(me&&me.alive){
-  let dx=(keys.d?1:0)-(keys.a?1:0),dz=(keys.s?1:0)-(keys.w?1:0),len=Math.hypot(dx,dz);
+  const side=(keys.d?1:0)-(keys.a?1:0),forward=(keys.w?1:0)-(keys.s?1:0);
+  let dx=side*Math.cos(cameraYaw)-forward*Math.sin(cameraYaw);
+  let dz=-side*Math.sin(cameraYaw)-forward*Math.cos(cameraYaw);
+  const len=Math.hypot(dx,dz);
   if(len>0){dx/=len;dz/=len;me.dx=dx;me.dz=dz;me.g.position.x=THREE.MathUtils.clamp(me.g.position.x+dx*(keys.block?2.7:6.5)*dt,-44,44);me.g.position.z=THREE.MathUtils.clamp(me.g.position.z+dz*(keys.block?2.7:6.5)*dt,-36,36);}
   if(now-lastSend>65){lastSend=now;send({type:"move",x:me.g.position.x,z:me.g.position.z,dx:me.dx,dz:me.dz,action:keys.block?"block":"idle"});}
  }
@@ -172,7 +194,9 @@ function frame(now){
   o.g.rotation.y=Math.atan2(o.dx||0,o.dz||1);
  }
  const focus=me?me.g.position:new THREE.Vector3(0,0,8);
- camera.position.lerp(new THREE.Vector3(focus.x,12.5,focus.z+19),.09);camera.lookAt(focus.x,1,focus.z);
+ const cameraDistance=19;
+  const desiredCamera=new THREE.Vector3(focus.x+Math.sin(cameraYaw)*cameraDistance,12.5,focus.z+Math.cos(cameraYaw)*cameraDistance);
+  camera.position.lerp(desiredCamera,.12);camera.lookAt(focus.x,1,focus.z);
  renderer.render(scene,camera);
 }
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
