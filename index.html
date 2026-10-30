@@ -113,7 +113,7 @@ function send(obj){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(
 function updateState(m){
  syncCars(m.cars||[]);
  const list=m.players||[],seen=new Set();
- for(const p of list){seen.add(p.id);if(!players.has(p.id))players.set(p.id,makePerson(p));const o=players.get(p.id);o.targetX=p.x;o.targetZ=p.z;o.health=p.health;o.alive=p.alive;o.dx=p.dx;o.dz=p.dz;o.action=p.action;o.vehicleId=p.vehicleId||null;o.seat=p.seat;if(!p.alive)o.g.visible=false;else o.g.visible=true;}
+ for(const p of list){seen.add(p.id);if(!players.has(p.id))players.set(p.id,makePerson(p));const o=players.get(p.id);const previousVehicle=o.vehicleId;o.targetX=p.x;o.targetZ=p.z;o.health=p.health;o.alive=p.alive;o.dx=p.dx;o.dz=p.dz;o.action=p.action;o.vehicleId=p.vehicleId||null;o.seat=p.seat;if(previousVehicle&&!o.vehicleId&&p.id===myId)o.g.position.set(p.x,0,p.z);if(!p.alive)o.g.visible=false;else o.g.visible=true;}
  for(const [id,o] of players)if(!seen.has(id)){scene.remove(o.g);players.delete(id);}
  $("playersCount").textContent=list.length+" / 10 игроков";$("redScore").textContent="КРАСНЫЕ "+(m.redScore||0);$("blueScore").textContent=(m.blueScore||0)+" СИНИЕ";
  const me=players.get(myId);$("healthText").textContent=me?"Здоровье: "+me.health+"%":"Здоровье: —";
