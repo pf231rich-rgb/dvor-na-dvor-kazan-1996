@@ -111,7 +111,7 @@ test("attacks damage opponents and blocking reduces damage", async () => {
     const wa = await join(a, "Боец 1", "COMBAT");
     const wb = await join(b, "Боец 2", "COMBAT");
     const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 24; i++) {
       a.send(JSON.stringify({ type:"move", x:0, z:0, dx:1, dz:0, action:"idle" }));
       b.send(JSON.stringify({ type:"move", x:1, z:0, dx:-1, dz:0, action:"idle" }));
       await pause(120);
