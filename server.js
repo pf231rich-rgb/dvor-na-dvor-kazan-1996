@@ -84,7 +84,7 @@ function join(ws,msg) {
   if (room.players.size>=10) return send(ws,{type:"error",message:"Комната заполнена. Максимум 10 игроков."});
   let red=0,blue=0; for(const p of room.players.values()) p.team==="red"?red++:blue++;
   const team=red<=blue?"red":"blue";
-  const p={id:ws.id,nick:cleanNick(msg.nick),team,ws,x:team==="red"?-10:10,z:team==="red"?12:18,
+  const p={id:ws.id,nick:cleanNick(msg.nick),team,ws,x:team==="red"?-4:4,z:team==="red"?12:18,
     dx:team==="red"?1:-1,dz:0,health:100,alive:true,action:"idle",score:0,deaths:0,
     respawnAt:0,lastMove:Date.now(),lastAttack:0,vehicleId:null,seat:null};
   room.players.set(p.id,p); ws.roomCode=code;
