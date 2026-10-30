@@ -64,7 +64,7 @@ function leave(ws) {
   else publish(room);
 }
 function cleanNick(value) {
-  return String(value || "Игрок").replace(/[<>\\u0000-\\u001f]/g, "").trim().slice(0, 16) || "Игрок";
+  return String(value || "Игрок").replace(/[<>\x00-\x1f]/g, "").trim().slice(0, 16) || "Игрок";
 }
 function join(ws, msg) {
   if (ws.roomCode) leave(ws);
