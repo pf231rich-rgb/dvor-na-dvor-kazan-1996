@@ -13,6 +13,8 @@ var enemy_hp = 100
 var facing = 1
 var attack_timer = 0.0
 var enemy_attack_timer = 0.0
+var jump_time = 0.0
+var jump_height = 0.0
 var game_over = false
 var win = false
 var touch_actions = {}
@@ -39,7 +41,7 @@ func _make_ui():
     result_label.align = Label.ALIGN_CENTER
     restart_label.align = Label.ALIGN_CENTER
 
-    var captions = ["◀", "▶", "▲", "▼", "УДАР", "БЛОК"]
+    var captions = ["◀", "▶", "▲", "▼", "УДАР", "БЛОК", "ПРЫЖОК"]
     for caption in captions:
         var label = _new_label(caption, Color("#ffffff"), 17)
         label.align = Label.ALIGN_CENTER
@@ -69,7 +71,8 @@ func _layout_ui():
         Vector2(155, s.y - 155),
         Vector2(155, s.y - 35),
         Vector2(s.x - 100, s.y - 95),
-        Vector2(s.x - 220, s.y - 55)
+        Vector2(s.x - 220, s.y - 55),
+        Vector2(s.x - 100, s.y - 210)
     ]
     for i in range(button_labels.size()):
         button_labels[i].rect_position = centers[i] - Vector2(38, 20)
@@ -87,6 +90,8 @@ func _process(delta):
         return
 
     attack_timer = max(0.0, attack_timer - delta)
+    jump_time = max(0.0, jump_time - delta)
+    jump_height = sin((1.0 - jump_time / 0.58) * PI) * 46.0 if jump_time > 0.0 else 0.0
     enemy_attack_timer = max(0.0, enemy_attack_timer - delta)
 
     var move = Vector2.ZERO
@@ -107,6 +112,9 @@ func _process(delta):
 
     player_pos.x = clamp(player_pos.x, 45.0, WORLD_W - 45.0)
     player_pos.y = clamp(player_pos.y, 285.0, 440.0)
+
+    if (Input.is_key_pressed(KEY_K) or _touch("jump")) and jump_time <= 0.0:
+        jump_time = 0.58
 
     var wants_attack = Input.is_key_pressed(KEY_J) or Input.is_key_pressed(KEY_SPACE) or _touch("attack")
     if wants_attack and attack_timer <= 0.0:
@@ -161,7 +169,9 @@ func _action_at(pos):
         if x < 0.19:
             return "left"
         return "right"
-    if x > 0.78 and y > 0.62:
+    if x > 0.78 and y < 0.68:
+        return "jump"
+    if x > 0.78 and y >= 0.68:
         return "attack"
     if x > 0.60 and y > 0.72:
         return "block"
@@ -196,7 +206,7 @@ func _draw():
     draw_rect(Rect2(800, 328, 90, 45), Color("#303840"))
 
     _draw_fighter(enemy_pos, false, enemy_hp <= 0)
-    _draw_fighter(player_pos, true, false)
+    _draw_fighter(player_pos, true, false, jump_height)
 
     # Health bars.
     draw_rect(Rect2(28, 88, 190, 12), Color("#22252b"))
@@ -208,13 +218,14 @@ func _draw():
     var centers = [
         Vector2(105, h - 95), Vector2(205, h - 95),
         Vector2(155, h - 155), Vector2(155, h - 35),
-        Vector2(w - 100, h - 95), Vector2(w - 220, h - 55)
+        Vector2(w - 100, h - 95), Vector2(w - 220, h - 55),
+        Vector2(w - 100, h - 210)
     ]
     for center in centers:
         draw_circle(center, 37, Color(0.08, 0.10, 0.13, 0.68))
         draw_arc(center, 37, 0, PI * 2, 32, Color("#c9c2ad"), 2.0)
 
-func _draw_fighter(pos, is_player, defeated):
+func _draw_fighter(pos, is_player, defeated, height = 0.0):
     if defeated:
         return
     var body = Color("#315f9b") if is_player else Color("#a84c3f")
@@ -222,15 +233,16 @@ func _draw_fighter(pos, is_player, defeated):
     var x = pos.x
     var y = pos.y
     draw_circle(Vector2(x, y + 22), 23, Color(0, 0, 0, 0.35))
-    draw_rect(Rect2(x - 14, y - 10, 11, 28), Color("#20232a"))
-    draw_rect(Rect2(x + 3, y - 10, 11, 28), Color("#20232a"))
-    draw_rect(Rect2(x - 18, y + 13, 17, 7), Color("#17191d"))
-    draw_rect(Rect2(x + 1, y + 13, 17, 7), Color("#17191d"))
-    draw_rect(Rect2(x - 19, y - 48, 38, 40), body)
-    draw_rect(Rect2(x - 13, y - 70, 26, 23), skin)
-    draw_rect(Rect2(x - 15, y - 74, 30, 9), Color("#30251f"))
-    draw_rect(Rect2(x - 13, y - 42, 6, 18), Color(1, 1, 1, 0.16))
-    draw_rect(Rect2(x + 8, y - 36, 5, 5), Color("#d8d0b5"))
+    var body_y = y - height
+    draw_rect(Rect2(x - 14, body_y - 10, 11, 28), Color("#20232a"))
+    draw_rect(Rect2(x + 3, body_y - 10, 11, 28), Color("#20232a"))
+    draw_rect(Rect2(x - 18, body_y + 13, 17, 7), Color("#17191d"))
+    draw_rect(Rect2(x + 1, body_y + 13, 17, 7), Color("#17191d"))
+    draw_rect(Rect2(x - 19, body_y - 48, 38, 40), body)
+    draw_rect(Rect2(x - 13, body_y - 70, 26, 23), skin)
+    draw_rect(Rect2(x - 15, body_y - 74, 30, 9), Color("#30251f"))
+    draw_rect(Rect2(x - 13, body_y - 42, 6, 18), Color(1, 1, 1, 0.16))
+    draw_rect(Rect2(x + 8, body_y - 36, 5, 5), Color("#d8d0b5"))
 
 func _unhandled_key_input(event):
     if event is InputEventKey and event.pressed and event.scancode == KEY_R and game_over:
