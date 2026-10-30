@@ -1,0 +1,9 @@
+{
+  "name": "dvor-na-dvor-kazan-1996",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser 3D online multiplayer prototype",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "ws": "^8.18.0" }
+}
