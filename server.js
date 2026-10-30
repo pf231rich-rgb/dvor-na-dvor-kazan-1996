@@ -19,7 +19,7 @@ const CAR_SPAWNS = [
   { id:"gaz3110-1", model:"gaz3110", name:"ГАЗ-3110", color:0x20272d, x:-186, z:116, heading:0.2 }
 ];
 function makeCars() {
-  return new Map(CAR_SPAWNS.map(c => [c.id, { ...c, speed:0, throttle:0, steer:0, occupants:[] }]));
+  return new Map(CAR_SPAWNS.map(c => [c.id, { ...c, speed:0, throttle:0, steer:0, occupants:[null,null,null,null] }]));
 }
 const server = http.createServer((req, res) => {
   if (req.url === "/health" || req.url === "/healthz") {
@@ -61,8 +61,7 @@ function releaseVehicle(room, p, tell=true) {
   if (!p.vehicleId) return;
   const car = room.cars.get(p.vehicleId);
   if (car) {
-    car.occupants = car.occupants.filter(id => id !== p.id);
-    if (car.occupants.length === 0) { car.throttle=0; car.steer=0; }
+    car.occupants[p.seat] = null;\n    if (car.occupants.every(id => !id)) { car.throttle=0; car.steer=0; }
     if (tell) broadcast(room, { type:"notice", text:p.nick+" вышел из "+car.name+"." });
   }
   p.vehicleId = null; p.seat = null; p.action = "idle";
