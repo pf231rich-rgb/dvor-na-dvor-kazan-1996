@@ -71,7 +71,7 @@ function city(){
 city();
 const cars=new Map(),players=new Map();
 function makeCar(c){
- const g=new THREE.Group();scene.add(g);const body=mat(c.color,.58),glass=new THREE.MeshStandardMaterial({color:0x253a43,roughness:.24,metalness:.2,transparent:true,opacity:.82}),chrome=mat(0xaaa99e,.3,.75),rubber=mat(0x17191a),lamp=mat(0xe5d7ad,.25);
+ const g=new THREE.Group();scene.add(g);const body=mat(c.color,.58),glass=new THREE.MeshStandardMaterial({color:0x253a43,roughness:.24,metalness:.2,transparent:true,opacity:.42}),chrome=mat(0xaaa99e,.3,.75),rubber=mat(0x17191a),lamp=mat(0xe5d7ad,.25);
  const type=c.model,van=type==="uaz469",hatch=type==="vaz2109"||type==="moskvich",volga=type==="gaz24"||type==="gaz3110";
  const L=van?4.2:(volga?5.1:4.25),W=van?1.85:(volga?1.82:1.72),roofH=van?2.05:1.72;
  box(g,L,.62,W,c.color,0,.72,0,.55);box(g,L*.24,.28,W*.96,c.color,L*.37,.48,0,.55);
