@@ -133,3 +133,28 @@ test("attacks damage opponents and blocking reduces damage", async () => {
     b.close();
   }
 });
+
+test("players can share a car and the driver can move it", async () => {
+  const a = await connect();
+  const b = await connect();
+  try {
+    const wa = await join(a, "Водитель", "CARS");
+    const wb = await join(b, "Пассажир", "CARS");
+    assert.ok(wa.cars.some(c => c.id === "vaz2106-1"));
+    const enteredA = waitForMessage(a, m => m.type === "state" && m.players?.some(p => p.id === wa.id && p.vehicleId === "vaz2106-1"));
+    a.send(JSON.stringify({ type:"vehicleEnter" }));
+    const stateA = await enteredA;
+    assert.equal(stateA.players.find(p => p.id === wa.id).seat, 0);
+    const enteredB = waitForMessage(b, m => m.type === "state" && m.players?.some(p => p.id === wb.id && p.vehicleId === "vaz2106-1"));
+    b.send(JSON.stringify({ type:"vehicleEnter" }));
+    const stateB = await enteredB;
+    assert.equal(stateB.players.find(p => p.id === wb.id).seat, 1);
+    const moving = waitForMessage(a, m => m.type === "state" && m.cars?.some(c => c.id === "vaz2106-1" && c.speed > 0.1));
+    a.send(JSON.stringify({ type:"vehicleControl", throttle:1, steer:0.25 }));
+    const movingState = await moving;
+    assert.ok(movingState.cars.find(c => c.id === "vaz2106-1").speed > 0.1);
+  } finally {
+    a.close();
+    b.close();
+  }
+});
