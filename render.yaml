@@ -3,6 +3,6 @@ services:
     name: dvor-na-dvor-kazan-1996
     runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && npm test
     startCommand: npm start
     healthCheckPath: /health
